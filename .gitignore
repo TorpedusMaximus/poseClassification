@@ -1,4 +1,7 @@
-DatasetGenerator/output
-DatasetGenerator/dataset
+output
 .idea/
 __pycache__/
+dataset
+small_dataset
+Classifiers
+WAŻNE

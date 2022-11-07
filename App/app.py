@@ -4,11 +4,14 @@ import numpy as np
 import joblib
 import tensorflow as tf
 
+from sklearn.svm import SVC
+
 from App.cropUtils import crop_and_resize, init_crop_region, determine_crop_region
-from App.drawUtils import draw_keypoints, draw_connections
+from App.drawUtils import draw_keypoints, draw_connections, printPose
 
 # This section loads the movenet_singlepose_thunder.tflite model to the interpreter.
-detector = tf.lite.Interpreter(model_path="App/movenet.tflite")
+# detector = tf.lite.Interpreter(model_path="App/movenet.tflite")
+detector = tf.lite.Interpreter(model_path="C:\\Users\\malko\\PycharmProjects\\poseClassification\\App\\movenet.tflite")
 detector.allocate_tensors()
 
 # Initialize list of body keypoints, where x-position, y-position and confidence score of each body keypoint will be stored
@@ -17,9 +20,8 @@ input_details = detector.get_input_details()
 output_details = detector.get_output_details()
 INPUT_SIZES = input_details[0]['shape'][1]
 
-#classifier_path = 'classifier_v1.pkl'
-#classifier = joblib.load(classifier_path)
-
+classifier_path = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\Classifiers\\2.1.0\\GaussianProcess2.1.0.pkl'
+classifier: SVC = joblib.load(classifier_path)
 
 image_height = 0
 image_width = 0
@@ -62,11 +64,14 @@ def postprocess(keypoints_run_inference, crop_region):
 
 
 def classify(model_output):
-    # from sklearn.gaussian_process import GaussianProcessClassifier
-    #result = classifier.score(model_output)
-    # co dalej
-    # nie wiem ?
-    pass
+    data = []
+    for x, y, conf in model_output:
+        data.append(x)
+        data.append(y)
+    result = classifier.predict(np.expand_dims(data, axis=0))
+    print(result)
+
+    return result[0]
 
 
 def main():
@@ -92,13 +97,14 @@ def main():
 
                 model_output = inference(frame, crop_region)
                 keypoints = postprocess(model_output, crop_region)
-                classify(model_output)
+                pose = classify(model_output)
 
                 # Determine crop region based on person's torso position.
                 crop_region = determine_crop_region(model_output, image_height, image_width)
 
                 draw_connections(frame, keypoints)
                 draw_keypoints(frame, keypoints)
+                printPose(frame, pose)
 
                 cv2.imshow("Pose Classification", frame)
 

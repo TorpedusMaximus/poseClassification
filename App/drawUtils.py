@@ -2,6 +2,13 @@ import cv2
 
 from constants import *
 
+def printPose(frame,pose):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    org = (30, 30)
+    fontScale = 1
+    color = (255, 0, 0)
+    thickness = 2
+    cv2.putText(frame, pose, org, font, fontScale, color, thickness, cv2.LINE_AA)
 
 def draw_keypoints(frame, keypoints):
     for i in range(17):

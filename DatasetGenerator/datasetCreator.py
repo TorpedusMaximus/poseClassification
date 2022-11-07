@@ -28,11 +28,22 @@ def inference(image):
     return model_output
 
 
-dataset = 'dataset/'
-outputDir = 'output/'
+def writable(modelOutput):
+    writableOutput = ""
+    for keypoint in modelOutput:
+        x, y, conf = keypoint
+        writableOutput += f"{x}:{y} "
+
+    return writableOutput
 
 
-file = open('output/classification_dataset.csv', 'w', newline='')
+dataset = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\small_dataset\\'
+outputDir = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\output\\'
+
+if not os.path.exists(outputDir):
+    os.mkdir(outputDir)
+
+file = open('../output/classification_dataset.csv', 'w', newline='')
 fileWriter = csv.writer(file)
 
 total = 0
@@ -51,22 +62,27 @@ for label in os.listdir(dataset):
     index = 0
     for filename in os.listdir(labelDir):
         imagePath = os.path.join(labelDir, filename)
-        image = cv2.imread(imagePath)
-        modelOutput = inference(image)
+        try:
+            image = cv2.imread(imagePath)
+            modelOutput = inference(image)
+            writableOutput = writable(modelOutput)
 
-        fileWriter.writerow([modelOutput, label])
+            fileWriter.writerow([writableOutput, label])
 
-        image_height, image_width, _ = image.shape
-        modelOutput[:, 0] *= image_height
-        modelOutput[:, 1] *= image_width
+            image_height, image_width, _ = image.shape
+            modelOutput[:, 0] *= image_height
+            modelOutput[:, 1] *= image_width
 
-        draw_keypoints(image, modelOutput)
-        draw_connections(image, modelOutput)
+            draw_keypoints(image, modelOutput)
+            draw_connections(image, modelOutput)
 
-        if not os.path.exists(outputDir + '/' + label):
-            os.makedirs(outputDir + '/' + label)
+            if not os.path.exists(outputDir + '/' + label):
+                os.makedirs(outputDir + '/' + label)
 
-        cv2.imwrite(outputDir + label + '/' + str(index) + '.jpg', image)
+            cv2.imwrite(outputDir + label + '/' + str(index) + '.jpg', image)
+        except:
+            print(f"Something wrong with: {imagePath}")
+
         progressBar.update(1)
         index += 1
 
