@@ -20,7 +20,7 @@ input_details = detector.get_input_details()
 output_details = detector.get_output_details()
 INPUT_SIZES = input_details[0]['shape'][1]
 
-classifier_path = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\Classifiers\\2.1.0\\GaussianProcess2.1.0.pkl'
+classifier_path = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\Classifiers\\3.0.1\\RBFSVM3.0.1.pkl'
 classifier: SVC = joblib.load(classifier_path)
 
 image_height = 0
@@ -96,8 +96,8 @@ def main():
             if ret:
 
                 model_output = inference(frame, crop_region)
-                keypoints = postprocess(model_output, crop_region)
                 pose = classify(model_output)
+                keypoints = postprocess(model_output, crop_region)
 
                 # Determine crop region based on person's torso position.
                 crop_region = determine_crop_region(model_output, image_height, image_width)

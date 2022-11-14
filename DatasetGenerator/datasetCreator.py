@@ -28,16 +28,22 @@ def inference(image):
     return model_output
 
 
-def writable(modelOutput):
+def writeResult(data, label, filepath):
     writableOutput = ""
-    for keypoint in modelOutput:
+    count_errors = 0
+    for keypoint in data:
         x, y, conf = keypoint
+        if conf < 0.5:
+            count_errors += 1
         writableOutput += f"{x}:{y} "
 
-    return writableOutput
+    if count_errors < 5:
+        fileWriter.writerow([writableOutput, label])
+    else:
+        errorWriter.writerow([filepath])
 
 
-dataset = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\small_dataset\\'
+dataset = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\dataset\\'
 outputDir = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\output\\'
 
 if not os.path.exists(outputDir):
@@ -45,6 +51,9 @@ if not os.path.exists(outputDir):
 
 file = open('../output/classification_dataset.csv', 'w', newline='')
 fileWriter = csv.writer(file)
+
+file = open('../output/errors.csv', 'w', newline='')
+errorWriter = csv.writer(file)
 
 total = 0
 
@@ -65,9 +74,7 @@ for label in os.listdir(dataset):
         try:
             image = cv2.imread(imagePath)
             modelOutput = inference(image)
-            writableOutput = writable(modelOutput)
-
-            fileWriter.writerow([writableOutput, label])
+            writeResult(modelOutput, label, imagePath)
 
             image_height, image_width, _ = image.shape
             modelOutput[:, 0] *= image_height
