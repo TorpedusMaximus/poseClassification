@@ -1,29 +1,32 @@
 import os
-import numpy as np
 
-def countLabels(set):
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+
+def countLabels(set, alllabels):
     count = {}
+    for label in alllabels:
+        count[label] = 0
+
     for label in set:
-        if label in count:
-            count[label] +=1
-        else:
-            count[label] = 1
+        count[label] += 1
 
     return count
 
 
 allLabels = []
-os.listdir('C:\\Users\\malko\\PycharmProjects\\poseClassification\\output\\')
+for label in os.listdir('../output'):
+    if label not in allLabels:
+        allLabels.append(label)
 
-
-
-dataPath = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\output\\classification_dataset.csv'
+dataPath = '../output/classification_dataset.csv'
 
 # read training file
 file = open(dataPath, 'r')
 data = file.read().split('\n')
 dataset = []
-labels = []
+trai_labels = []
 
 rowIndex = 0
 
@@ -38,10 +41,18 @@ for row in data:
         coordinates.append(float(x))
         coordinates.append(float(y))
     dataset.append(coordinates)
-    labels.append(label)
+    trai_labels.append(label)
 
-    rowIndex+=1
+    rowIndex += 1
 
 dataset = np.array(dataset).astype(np.float32)
 
-print(countLabels(labels))
+labels = countLabels(trai_labels, allLabels)
+
+X_train, X_test, y_train, y_test = train_test_split(dataset, trai_labels, test_size=0.2, stratify=trai_labels)
+
+train = countLabels(y_train, allLabels)
+test = countLabels(y_test, allLabels)
+
+for label in train:
+    print(f'{label}: {train[label]}, {test[label]}')

@@ -11,7 +11,7 @@ from App.drawUtils import draw_keypoints, draw_connections, printPose
 
 # This section loads the movenet_singlepose_thunder.tflite model to the interpreter.
 # detector = tf.lite.Interpreter(model_path="App/movenet.tflite")
-detector = tf.lite.Interpreter(model_path="C:\\Users\\malko\\PycharmProjects\\poseClassification\\App\\movenet.tflite")
+detector = tf.lite.Interpreter(model_path="movenet.tflite")
 detector.allocate_tensors()
 
 # Initialize list of body keypoints, where x-position, y-position and confidence score of each body keypoint will be stored
@@ -20,7 +20,7 @@ input_details = detector.get_input_details()
 output_details = detector.get_output_details()
 INPUT_SIZES = input_details[0]['shape'][1]
 
-classifier_path = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\Classifiers\\3.0.1\\RBFSVM3.0.1.pkl'
+classifier_path = '../Classifiers/3.1.0/RBF SVM3.1.0.pkl'
 classifier: SVC = joblib.load(classifier_path)
 
 image_height = 0

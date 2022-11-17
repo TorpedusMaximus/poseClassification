@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 import tqdm
 
+from constants import THRESHOLD_CONFIDENCE
+
 from DatasetGenerator.drawUtils import draw_keypoints, draw_connections
 
 # This section loads the movenet_singlepose_thunder.tflite model to the interpreter.
@@ -33,7 +35,7 @@ def writeResult(data, label, filepath):
     count_errors = 0
     for keypoint in data:
         x, y, conf = keypoint
-        if conf < 0.5:
+        if conf < THRESHOLD_CONFIDENCE:
             count_errors += 1
         writableOutput += f"{x}:{y} "
 
@@ -43,8 +45,8 @@ def writeResult(data, label, filepath):
         errorWriter.writerow([filepath])
 
 
-dataset = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\dataset\\'
-outputDir = 'C:\\Users\\malko\\PycharmProjects\\poseClassification\\output\\'
+dataset = '../dataset/'
+outputDir = '../output/'
 
 if not os.path.exists(outputDir):
     os.mkdir(outputDir)
