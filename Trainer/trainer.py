@@ -1,7 +1,6 @@
 import os
 import joblib
 import numpy as np
-from imblearn.over_sampling import SMOTE
 
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
@@ -30,7 +29,7 @@ file = open('version', 'w')
 numbers = version.split('.')
 file.write(f'{numbers[0]}.{numbers[1]}.{int(numbers[2]) + 1}')
 
-dataPath = '../output/classification_dataset.csv'
+dataPath = '../balanced/classification_dataset.csv'
 classifierPath = f'../Classifiers/{version}/'
 
 if not os.path.exists(classifierPath):
@@ -56,16 +55,9 @@ for row in data:
 
 dataset = np.array(dataset).astype(np.float32)
 
-# dataset, labels = SMOTE().fit_resample(dataset, labels)
 
 
 X_train, X_test, y_train, y_test = train_test_split(dataset, labels, test_size=0.2, stratify=labels)
-
-# train = countLabels(y_train)
-# test = countLabels(y_test)
-#
-# for label in train:
-#     print(f'{label}: {train[label]}, {test[label]}')
 
 
 names = [

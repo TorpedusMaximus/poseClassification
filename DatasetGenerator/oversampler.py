@@ -5,7 +5,6 @@ import shutil
 import cv2
 import numpy as np
 import tqdm
-from imblearn.under_sampling import EditedNearestNeighbours
 from imblearn.over_sampling import SMOTE
 
 from DatasetGenerator.drawUtils import draw_keypoints, draw_connections
@@ -74,8 +73,8 @@ for i in range(len(X_resampled)):
     coordinates = []
     for ii in range(17):
         coordinates.append((
-            sample[2*ii] * 100,
-            sample[2*ii + 1] * 100,
+            sample[2 * ii] * 100,
+            sample[2 * ii + 1] * 100,
             1
         ))
 
@@ -87,11 +86,12 @@ for i in range(len(X_resampled)):
     cv2.imwrite(outputDir + label + '/' + str(i) + '.jpg', image)
 
     write = ""
-    for keypoint in coordinates:
-        x, y, conf = keypoint
+    for ii in range(17):
+        x = sample[2 * ii]
+        y = sample[2 * ii + 1]
         write += f"{x}:{y} "
 
-    fileWriter.writerow((write,label))
+    fileWriter.writerow((write, label))
 
     progressBar.update(1)
 
