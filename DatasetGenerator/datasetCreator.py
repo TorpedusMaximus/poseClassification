@@ -1,5 +1,6 @@
 import csv
 import os
+import shutil
 
 import cv2
 import numpy as np
@@ -30,7 +31,7 @@ def inference(image):
     return model_output
 
 
-def writeResult(data, label, filepath):
+def writeResult(data):
     writableOutput = ""
     count_errors = 0
     for keypoint in data:
@@ -40,16 +41,18 @@ def writeResult(data, label, filepath):
         writableOutput += f"{x}:{y} "
 
     if count_errors < 5:
-        fileWriter.writerow([writableOutput, label])
+        return writableOutput
     else:
-        errorWriter.writerow([filepath])
+        return False
 
 
 dataset = '../dataset/'
 outputDir = '../output/'
 
-if not os.path.exists(outputDir):
-    os.mkdir(outputDir)
+if os.path.exists(outputDir):
+    shutil.rmtree(outputDir)
+
+os.mkdir(outputDir)
 
 file = open('../output/classification_dataset.csv', 'w', newline='')
 fileWriter = csv.writer(file)
@@ -76,7 +79,7 @@ for label in os.listdir(dataset):
         try:
             image = cv2.imread(imagePath)
             modelOutput = inference(image)
-            writeResult(modelOutput, label, imagePath)
+            writableOutput=writeResult(modelOutput)
 
             image_height, image_width, _ = image.shape
             modelOutput[:, 0] *= image_height
@@ -88,7 +91,12 @@ for label in os.listdir(dataset):
             if not os.path.exists(outputDir + '/' + label):
                 os.makedirs(outputDir + '/' + label)
 
-            cv2.imwrite(outputDir + label + '/' + str(index) + '.jpg', image)
+
+            if writableOutput:
+                fileWriter.writerow([writableOutput, label])
+                cv2.imwrite(outputDir + label + '/' + str(index) + '.jpg', image)
+            else:
+                errorWriter.writerow([filename])
         except:
             print(f"Something wrong with: {imagePath}")
 

@@ -1,15 +1,12 @@
 import os
 import joblib
 import numpy as np
+from imblearn.over_sampling import SMOTE
 
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
@@ -58,6 +55,9 @@ for row in data:
     labels.append(label)
 
 dataset = np.array(dataset).astype(np.float32)
+
+# dataset, labels = SMOTE().fit_resample(dataset, labels)
+
 
 X_train, X_test, y_train, y_test = train_test_split(dataset, labels, test_size=0.2, stratify=labels)
 

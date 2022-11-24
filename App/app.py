@@ -20,7 +20,7 @@ input_details = detector.get_input_details()
 output_details = detector.get_output_details()
 INPUT_SIZES = input_details[0]['shape'][1]
 
-classifier_path = '../Classifiers/3.1.0/RBF SVM3.1.0.pkl'
+classifier_path = '../Classifiers/5.0.1/SVM5.0.1.pkl'
 classifier: SVC = joblib.load(classifier_path)
 
 image_height = 0
