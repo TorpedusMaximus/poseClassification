@@ -1,3 +1,4 @@
+import csv
 import os
 
 import numpy as np
@@ -49,10 +50,12 @@ dataset = np.array(dataset).astype(np.float32)
 
 labels = countLabels(trai_labels, allLabels)
 
-X_train, X_test, y_train, y_test = train_test_split(dataset, trai_labels, test_size=0.2, stratify=trai_labels)
+# X_train, X_test, y_train, y_test = train_test_split(dataset, trai_labels, test_size=0.2, stratify=trai_labels)
 
-train = countLabels(y_train, allLabels)
-test = countLabels(y_test, allLabels)
+# train = countLabels(y_train, allLabels)
 
-for label in train:
-    print(f'{label}: {train[label]}, {test[label]}')
+with open('labels.csv', 'w', newline='') as file:
+    fileWriter = csv.writer(file)
+
+    for label in labels:
+        fileWriter.writerow((label, labels[label]))
