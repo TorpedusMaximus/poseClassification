@@ -28,11 +28,6 @@ image_width = 0
 
 
 def inference(image, crop_region):
-    """
-    This function performs basic handling of movenet model.
-    The input is an image. The result is updated keypoint list.
-    """
-
     input_image = crop_and_resize(tf.expand_dims(image, axis=0), crop_region, crop_size=(INPUT_SIZES, INPUT_SIZES))
     input_image = tf.cast(input_image, dtype=tf.float32)
     detector.set_tensor(input_details[0]['index'], input_image.numpy())
