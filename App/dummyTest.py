@@ -1,4 +1,6 @@
 # Imports
+import time
+
 import cv2
 import numpy as np
 import joblib
@@ -83,51 +85,35 @@ def main():
     # First, we need to open the cap and establish initial crop_region.
     cap = cv2.VideoCapture(0)
 
-    if not cap.isOpened():
-        print("Error opening video stream or file")
-    else:
-        global image_height, image_width
-        image_width = int(cap.get(3))
-        image_height = int(cap.get(4))
-        crop_region = init_crop_region(image_height, image_width)
+    frame = cv2.imread('00000000.jpg')
 
-        # Windows for testing on Linux (ﾉ≧ڡ≦)ﾉ
-        cv2.namedWindow("Pose Classification", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("Pose Classification", 1280, 720)
+    global image_height, image_width
+    image_height, image_width, _ = frame.shape
+    crop_region = init_crop_region(image_height, image_width)
 
-        while cap.isOpened():
-            # Capture frame-by-frame. If frame is read correctly, proceed with movenet model procedures.
-            ret, frame = cap.read()
-            if ret:
+    model_output = inference(frame, crop_region)
 
-                model_output = inference(frame, crop_region)
+    if person_detected(model_output):
+        pose = classify(model_output)
+        printPose(frame, pose)
 
-                if person_detected(model_output):
-                    pose = classify(model_output)
-                    printPose(frame, pose)
+    keypoints = postprocess(model_output, crop_region)
 
-                keypoints = postprocess(model_output, crop_region)
+    draw_connections(frame, keypoints)
+    draw_keypoints(frame, keypoints)
 
-                # Determine crop region based on person's torso position.
-                crop_region = determine_crop_region(model_output, image_height, image_width)
+    cv2.imwrite("work.jpg", frame)
 
-                draw_connections(frame, keypoints)
-                draw_keypoints(frame, keypoints)
+    cv2.namedWindow("Yoga Pose Classifier", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Yoga Pose Classifier", 2*image_width, 2*image_height)
 
-                cv2.imshow("Pose Classification", frame)
+    while True:
+        cv2.imshow("Yoga Pose Classifier", frame)
+        key = cv2.waitKey(33) & 0xFF
+        if key == ord("q"):
+            break
 
-                # Press Q on keyboard to  exit
-                key = cv2.waitKey(33) & 0xFF
-                if key == ord("q"):
-                    break
 
-            # Break the loop if frame is read incorrectly
-            else:
-                break
-
-        # Release video capture object
-        cap.release()
-        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

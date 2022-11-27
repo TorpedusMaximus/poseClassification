@@ -7,10 +7,10 @@ from DatasetGenerator.constants import *
 def draw_keypoints(frame, keypoints):
     for ky, kx, kp_conf in keypoints:
         if kp_conf > THRESHOLD_CONFIDENCE:
-            cv2.circle(frame, (int(kx), int(ky)), 3, (37, 130, 255), 2)
+            cv2.circle(frame, (int(kx), int(ky)), 3, (37, 130, 255), -1)
 
     neck = np.average([keypoints[5], keypoints[6]], axis=0)
-    cv2.circle(frame, (int(neck[1]), int(neck[0])), 3, (37, 130, 255), 2)
+    cv2.circle(frame, (int(neck[1]), int(neck[0])), 3, (37, 130, 255), -1)
 
 
 def draw_connections(frame, keypoints):
