@@ -1,11 +1,4 @@
-def generate_movenet_output(dataset_path, output_path):
-    """
-    Generates movenet model output
-    1. Read the dataset images from the dataset path
-    2. Inference MoveNet model on the prepared dataset images
-    3. Save the output to the output path
-    """
-    pass
+
 
 
 def balance_dataset(movenet_output, output_path):
