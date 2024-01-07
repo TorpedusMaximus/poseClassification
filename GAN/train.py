@@ -28,9 +28,9 @@ def main():
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
-    num_epochs = 10
+    num_epochs = 50
 
-    generator = Generator(latent_dim).to(device)
+    generator = Generator().to(device)
     discriminator = Discriminator().to(device)
 
     adversarial_loss = nn.BCELoss()
@@ -80,7 +80,7 @@ def main():
             """
             Progress monitoring
             """
-            if (i + 1) % 2 == 0:
+            if (i + 1) % 30 == 0:
                 print(
                     f"Epoch [{epoch + 1}/{num_epochs}] " 
                     f"Batch {i + 1}/{len(dataloader)} "
@@ -89,14 +89,14 @@ def main():
                 )
 
         # Saving generated images for every epoch
-        if (epoch + 1) % 2 == 0:
+        if (epoch + 1) % 10 == 0:
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
                 generated = generator(z).detach().cpu()
                 grid = torchvision.utils.make_grid(generated, nrow=4, normalize=True)
                 plt.imshow(np.transpose(grid, (1, 2, 0)))
                 plt.axis("off")
-                plt.show()
+                plt.savefig(f"./GAN/generated_images/generated_epoch_{epoch + 1}.png")
 
 
 if __name__ == "__main__":
