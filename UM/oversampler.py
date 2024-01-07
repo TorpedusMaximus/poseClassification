@@ -1,96 +1,87 @@
 import csv
 import os
 import shutil
+from pathlib import Path
 
 import cv2
 import numpy as np
 import tqdm
 from imblearn.over_sampling import SMOTE
 
-
-def countLabels(set):
-    count = {}
-    for label in set:
-        if label in count:
-            count[label] += 1
-        else:
-            count[label] = 1
-
-    return count
+from constants import ROOT_DIR
+from um.draw_utils import draw_keypoints, draw_connections
 
 
-dataPath = '../output/classification_dataset.csv'
-outputDir = '../balanced/'
+def save_images(X, y) -> None:
+    save_path = ROOT_DIR / "test"
+    save_path.mkdir(parents=True, exist_ok=True)
 
-if os.path.exists(outputDir):
-    shutil.rmtree(outputDir)
+    boat = [
+        X[i]
+        for i in range(len(X))
+        if y[i] == "boat"
+    ]
 
-os.mkdir(outputDir)
+    for i, keypoints in enumerate(boat):
+        image = np.zeros((100, 100, 3)).astype(np.uint8)
 
-# read training file
-file = open(dataPath, 'r')
-data = file.read().split('\n')
-dataset = []
-labels = []
-for row in data:
-    xy, label = row.split(',')
-    xy = xy[:-1]
-    xy = xy.split(' ')
+        coordinates = []
+        for ii in range(17):
+            coordinates.append((
+                int(keypoints[2 * ii] * 100),
+                int(keypoints[2 * ii + 1] * 100),
+                1
+            ))
 
-    coordinates = []
-    for pair in xy:
-        x, y = pair.split(':')
-        coordinates.append(float(x))
-        coordinates.append(float(y))
-    dataset.append(coordinates)
-    labels.append(label)
+        draw_keypoints(image, coordinates)
+        draw_connections(image, coordinates)
 
-dataset = np.array(dataset).astype(np.float32)
+        cv2.imwrite(str(save_path / f"{i}.png"), image)
 
-balancer = SMOTE()
 
-X_resampled, y_resampled = balancer.fit_resample(dataset, labels)
+def save_outputs(outputs: dict[str, list], output_path: Path) -> None:
+    images_sum = 0
+    with open(output_path, 'w') as f:
+        writer = csv.writer(f)
+        for label, keypoints_list in outputs.items():
+            for keypoints in keypoints_list:
+                labeled = keypoints.copy()
+                labeled.append(label)
+                writer.writerow(labeled)
+            images_sum += len(keypoints_list)
+    print(f"Saved {images_sum} images to {output_path}")
 
-test1 = countLabels(labels)
-test2 = countLabels(y_resampled)
 
-for label in test2:
-    print(f'{label}: {test1[label]} -> {test2[label]}')
-    if not os.path.exists(f'{outputDir}/{label}'):
-        os.mkdir(f'{outputDir}/{label}')
+def transform_dict_to_lists(movenet_output: dict[str, list]) -> tuple[list, list]:
+    X = []
+    y = []
+    for label, keypoints_list in movenet_output.items():
+        for keypoints in keypoints_list:
+            X.append(keypoints)
+            y.append(label)
 
-file = open('../balanced/classification_dataset.csv', 'w', newline='')
-fileWriter = csv.writer(file)
+    return X, y
 
-progressBar = tqdm.tqdm(total=len(X_resampled))
 
-for i in range(len(X_resampled)):
-    label = y_resampled[i]
-    sample = X_resampled[i]
+def transform_lists_to_dict(X: list, y: list) -> dict[str, list]:
+    output: dict[str, list] = {}
+    for value, label in zip(X, y):
+        if output.get(label) is None:
+            output[label] = []
+        output[label].append(value)
 
-    coordinates = []
-    for ii in range(17):
-        coordinates.append((
-            sample[2 * ii] * 100,
-            sample[2 * ii + 1] * 100,
-            1
-        ))
+    return output
 
-    image = np.zeros((100, 100, 3))
 
-    draw_keypoints(image, coordinates)
-    draw_connections(image, coordinates)
+def balance_dataset(movenet_output: dict[str, list], output_path) -> dict[str, list]:
+    X, y = transform_dict_to_lists(movenet_output)
+    balancer = SMOTE()
+    X_resampled, y_resampled = balancer.fit_resample(X, y)
 
-    cv2.imwrite(outputDir + label + '/' + str(i) + '.jpg', image)
+    save_images(X_resampled, y_resampled)
 
-    write = ""
-    for ii in range(17):
-        x = sample[2 * ii]
-        y = sample[2 * ii + 1]
-        write += f"{x}:{y} "
+    balanced_keypoints = transform_lists_to_dict(X_resampled, y_resampled)
 
-    fileWriter.writerow((write, label))
+    save_outputs(balanced_keypoints, output_path)
 
-    progressBar.update(1)
-
-progressBar.close()
+    return balanced_keypoints
