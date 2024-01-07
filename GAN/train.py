@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from torchvision import datasets, transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
+from torchvision import transforms
 import matplotlib.pyplot as plt
 import numpy as np
 from GAN.gans_models import Generator, Discriminator
@@ -18,10 +20,10 @@ def main():
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
+    train_dataset = ImageFolder(root='./prepared', transform=transform)
+    dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
-    latent_dim = 100
+    latent_dim = 128
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
@@ -36,9 +38,9 @@ def main():
     optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1,beta2))
 
     for epoch in range(num_epochs):
-        for i, (batch) in enumerate(dataloader):
+        for i, (images, labels) in enumerate(dataloader):
             # Getting images from batch
-            real_images = batch[0].to(device)
+            real_images = images.to(device)
             # Creating adversarial ground truths
             valid = torch.ones(real_images.shape[0], 1, device=device)
             fake = torch.zeros(real_images.shape[0], 1, device=device)
@@ -50,7 +52,7 @@ def main():
             """
             optimizer_discriminator.zero_grad()
             # Sample noise as generator input
-            z = torch.randn(real_images.shape[0], latent_dim, device=device)
+            z = torch.randn(real_images.shape[0], latent_dim, 1, 1, device=device)
             # Generating a batch of images
             fake_images = generator(z)
 
@@ -77,18 +79,18 @@ def main():
             """
             Progress monitoring
             """
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 2 == 0:
                 print(
-                    f"Epoch [{epoch + 1}/{num_epochs}]\
-                                        Batch {i + 1}/{len(dataloader)} "
+                    f"Epoch [{epoch + 1}/{num_epochs}] " 
+                    f"Batch {i + 1}/{len(dataloader)} "
                     f"Discriminator Loss: {discriminator_loss.item():.4f} "
                     f"Generator Loss: {generator_loss.item():.4f}"
                 )
 
         # Saving generated images for every epoch
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 2 == 0:
             with torch.no_grad():
-                z = torch.randn(16, latent_dim, device=device)
+                z = torch.randn(16, latent_dim, 1, 1, device=device)
                 generated = generator(z).detach().cpu()
                 grid = torchvision.utils.make_grid(generated, nrow=4, normalize=True)
                 plt.imshow(np.transpose(grid, (1, 2, 0)))

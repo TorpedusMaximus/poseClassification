@@ -6,19 +6,40 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(latent_dim, 128 * 8 * 8),
-            nn.ReLU(),
-            nn.Unflatten(1, (128, 8, 8)),
-            nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128, momentum=0.78),
-            nn.ReLU(),
-            nn.Upsample(scale_factor=2),
-            nn.Conv2d(128, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, momentum=0.78),
-            nn.ReLU(),
-            nn.Conv2d(64, 3, kernel_size=3, padding=1),
+            #latent in 128x1x1
+            nn.ConvTranspose2d(128,1024,kernel_size = 4, stride = 1, padding = 0, bias = False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 1024x4x4
+
+            nn.ConvTranspose2d(1024,512,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 512x8x8
+
+            nn.ConvTranspose2d(512,256,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 256x16x16
+
+            nn.ConvTranspose2d(256,128,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 128x32x32
+
+            nn.ConvTranspose2d(128,64,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 64x64x64
+
+            nn.ConvTranspose2d(64,32,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 32x128x128
+
+            nn.ConvTranspose2d(32,3,kernel_size = 4, stride = 2, padding = 1, bias = False),
             nn.Tanh()
+            #out 3x256x256
         )
 
     def forward(self, z):
@@ -31,25 +52,43 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1),
-            nn.LeakyReLU(0.2),
-            nn.Dropout(0.25),
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-            nn.ZeroPad2d((0, 1, 0, 1)),
-            nn.BatchNorm2d(64, momentum=0.82),
-            nn.LeakyReLU(0.25),
-            nn.Dropout(0.25),
-            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(128, momentum=0.82),
-            nn.LeakyReLU(0.2),
-            nn.Dropout(0.25),
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(256, momentum=0.8),
-            nn.LeakyReLU(0.25),
-            nn.Dropout(0.25),
+            #input size being of 3 channels, 256x256
+            nn.Conv2d(3, 32 ,kernel_size = 3, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.1, inplace=True),
+            #output size being of 32 channels, 128x128
+
+            nn.Conv2d(32,64,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.1, inplace=True),
+            #out 64x64x64
+
+            nn.Conv2d(64,128,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.1, inplace = True),
+            #out 128x32x32
+
+            nn.Conv2d(128,256,kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.1,inplace = True),
+            #out 256x16x16
+
+            nn.Conv2d(256,512, kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace = True),
+            #out 512x8x8
+
+            nn.Conv2d(512,1024, kernel_size = 4, stride = 2, padding = 1, bias = False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1,inplace = True),
+            #out 1024x4x4
+
+            nn.Conv2d(1024,1,kernel_size = 4,stride = 1, padding = 0, bias = False),
+            #out 1x1x1
+
             nn.Flatten(),
-            nn.Linear(256 * 5 * 5, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
+            #final activation for T/F
         )
 
     def forward(self, img):
