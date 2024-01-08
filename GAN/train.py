@@ -11,10 +11,6 @@ from torchvision.datasets import ImageFolder
 from GAN.gans_models import Discriminator, Generator
 
 
-def get_class_labels(dataset):
-    return [cls for cls, idx in sorted(dataset.class_to_idx.items(), key=lambda x: x[1])]
-
-
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -32,12 +28,14 @@ def main():
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
-    num_epochs = 100
+    num_epochs = 50
+    num_classes = len(train_dataset.classes)
 
-    generator = Generator().to(device)
-    discriminator = Discriminator().to(device)
+    generator = Generator(num_classes).to(device)
+    discriminator = Discriminator(num_classes).to(device)
 
     adversarial_loss = nn.BCELoss()
+    auxiliary_loss = nn.CrossEntropyLoss()
 
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2))
     optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1,beta2))
@@ -46,6 +44,7 @@ def main():
         for i, (images, labels) in enumerate(dataloader):
             # Getting images from batch
             real_images = images.to(device)
+            labels = labels.to(device)
             # Creating adversarial ground truths
             valid = torch.ones(real_images.shape[0], 1, device=device)
             fake = torch.zeros(real_images.shape[0], 1, device=device)
@@ -59,12 +58,14 @@ def main():
             # Sample noise as generator input
             z = torch.randn(real_images.shape[0], latent_dim, 1, 1, device=device)
             # Generating a batch of images
-            fake_images = generator(z)
+            fake_images = generator(z, labels)
 
             # Measuring discriminator's ability to classify real and fake images
-            real_loss = adversarial_loss(discriminator(real_images), valid)
-            fake_loss = adversarial_loss(discriminator(fake_images.detach()), fake)
-            discriminator_loss = (real_loss + fake_loss) / 2
+            real_loss = adversarial_loss(discriminator(real_images, labels), valid)
+            fake_loss = adversarial_loss(discriminator(fake_images.detach(), labels), fake)
+            # Auxiliary loss for classifying the real images
+            # real_auxiliary_loss = auxiliary_loss(discriminator.get_auxiliary_output(real_images), labels)
+            discriminator_loss = (real_loss + fake_loss) / 2 # + real_auxiliary_loss
             # Backward pass nad optimize
             discriminator_loss.backward()
             optimizer_discriminator.step()
@@ -74,9 +75,12 @@ def main():
             """
             optimizer_generator.zero_grad()
             # Generating a batch of images
-            generated_images = generator(z)
+            generated_images = generator(z, labels)
             # Adversarial loss
-            generator_loss = adversarial_loss(discriminator(generated_images), valid)
+            generator_loss = adversarial_loss(discriminator(generated_images, labels), valid)
+            # Auxiliary loss for the generated images
+            # generated_auxiliary_loss = auxiliary_loss(discriminator.get_auxiliary_output(generated_images), labels)
+            # generator_loss += generated_auxiliary_loss
             # Backward pass and optimize
             generator_loss.backward()
             optimizer_generator.step()
@@ -93,22 +97,26 @@ def main():
                 )
 
         # Saving generated images for every epoch
-        if (epoch + 1) % 1 == 0:
+        if (epoch + 1) % 2 == 0:
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
-                generated = generator(z).detach().cpu()
+                random_labels = torch.randint(0, num_classes, (16,), device=device)
+                generated = generator(z, random_labels).detach().cpu()
 
-                # Get class labels
-                class_labels = get_class_labels(train_dataset)
+                # Save each generated image along with its label
+                for j in range(16):
+                    generated_image = generated[j]
+                    generated_label = random_labels[j].item()
 
-                # Display generated images with class labels
-                fig, axes = plt.subplots(4, 4, figsize=(8, 8))
-                for i in range(16):
-                    ax = axes[i // 4, i % 4]
-                    ax.imshow(np.transpose(generated[i], (1, 2, 0)))
-                    ax.axis("off")
-                    ax.set_title(class_labels[i % len(class_labels)])
-                plt.savefig(f"./GAN/generated_images/generated_epoch_{epoch + 1}.png")
+                    # Convert the generated image tensor to a NumPy array
+                    generated_image_np = generated_image.squeeze().numpy().transpose(1, 2, 0)
+                    generated_image_np = np.clip((generated_image_np + 1) / 2.0, 0, 1)
+
+                    # Save the generated image along with its label
+                    image_filename = f"./GAN/generated_images/generated_epoch_{epoch + 1}_label_{generated_label}.png"
+                    plt.imshow(generated_image_np)
+                    plt.axis("off")
+                    plt.savefig(image_filename)
 
 
 if __name__ == "__main__":
