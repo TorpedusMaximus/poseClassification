@@ -12,6 +12,7 @@ from GAN.gans_models import Discriminator, Generator
 
 
 def main():
+    global idx_to_class
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print(f"Using {device} as a device")
@@ -85,6 +86,10 @@ def main():
             generator_loss.backward()
             optimizer_generator.step()
 
+            # Check the class-to-index mapping
+            class_to_idx = train_dataset.class_to_idx
+            idx_to_class = {idx: class_name for class_name, idx in class_to_idx.items()}
+
             """
             Progress monitoring
             """
@@ -97,16 +102,20 @@ def main():
                 )
 
         # Saving generated images for every epoch
-        if (epoch + 1) % 2 == 0:
+        if (epoch + 1) % 10 == 0:
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
                 random_labels = torch.randint(0, num_classes, (16,), device=device)
+
+                # Map the random labels to class names
+                random_class_names = [idx_to_class[label.item()] for label in random_labels]
+
                 generated = generator(z, random_labels).detach().cpu()
 
                 # Save each generated image along with its label
                 for j in range(16):
                     generated_image = generated[j]
-                    generated_label = random_labels[j].item()
+                    generated_label = random_class_names[j]
 
                     # Convert the generated image tensor to a NumPy array
                     generated_image_np = generated_image.squeeze().numpy().transpose(1, 2, 0)
