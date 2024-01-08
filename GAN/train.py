@@ -11,6 +11,10 @@ from torchvision.datasets import ImageFolder
 from GAN.gans_models import Discriminator, Generator
 
 
+def get_class_labels(dataset):
+    return [cls for cls, idx in sorted(dataset.class_to_idx.items(), key=lambda x: x[1])]
+
+
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -28,7 +32,7 @@ def main():
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
-    num_epochs = 50
+    num_epochs = 100
 
     generator = Generator().to(device)
     discriminator = Discriminator().to(device)
@@ -89,13 +93,21 @@ def main():
                 )
 
         # Saving generated images for every epoch
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 1 == 0:
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
                 generated = generator(z).detach().cpu()
-                grid = torchvision.utils.make_grid(generated, nrow=4, normalize=True)
-                plt.imshow(np.transpose(grid, (1, 2, 0)))
-                plt.axis("off")
+
+                # Get class labels
+                class_labels = get_class_labels(train_dataset)
+
+                # Display generated images with class labels
+                fig, axes = plt.subplots(4, 4, figsize=(8, 8))
+                for i in range(16):
+                    ax = axes[i // 4, i % 4]
+                    ax.imshow(np.transpose(generated[i], (1, 2, 0)))
+                    ax.axis("off")
+                    ax.set_title(class_labels[i % len(class_labels)])
                 plt.savefig(f"./GAN/generated_images/generated_epoch_{epoch + 1}.png")
 
 
