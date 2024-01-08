@@ -29,14 +29,14 @@ def main():
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
-    num_epochs = 50
+    num_epochs = 100
     num_classes = len(train_dataset.classes)
 
     generator = Generator(num_classes).to(device)
     discriminator = Discriminator(num_classes).to(device)
 
     adversarial_loss = nn.BCELoss()
-    auxiliary_loss = nn.CrossEntropyLoss()
+    # auxiliary_loss = nn.CrossEntropyLoss()
 
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2))
     optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1,beta2))
@@ -86,7 +86,6 @@ def main():
             generator_loss.backward()
             optimizer_generator.step()
 
-            # Check the class-to-index mapping
             class_to_idx = train_dataset.class_to_idx
             idx_to_class = {idx: class_name for class_name, idx in class_to_idx.items()}
 
@@ -101,8 +100,8 @@ def main():
                     f"Generator Loss: {generator_loss.item():.4f}"
                 )
 
-        # Saving generated images for every epoch
         if (epoch + 1) % 10 == 0:
+            torch.save(generator.state_dict(), f"./GAN/models/generator_model_v1.0.0_epoch_{epoch + 1}.pth")
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
                 random_labels = torch.randint(0, num_classes, (16,), device=device)
@@ -112,16 +111,13 @@ def main():
 
                 generated = generator(z, random_labels).detach().cpu()
 
-                # Save each generated image along with its label
                 for j in range(16):
                     generated_image = generated[j]
                     generated_label = random_class_names[j]
 
-                    # Convert the generated image tensor to a NumPy array
                     generated_image_np = generated_image.squeeze().numpy().transpose(1, 2, 0)
                     generated_image_np = np.clip((generated_image_np + 1) / 2.0, 0, 1)
 
-                    # Save the generated image along with its label
                     image_filename = f"./GAN/generated_images/generated_epoch_{epoch + 1}_label_{generated_label}.png"
                     plt.imshow(generated_image_np)
                     plt.axis("off")

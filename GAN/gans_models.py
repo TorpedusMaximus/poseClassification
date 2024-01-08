@@ -46,7 +46,6 @@ class Generator(nn.Module):
         )
 
     def forward(self, z, labels):
-        # Embedding the class labels
         z = z.view(z.size(0), 128, 1, 1)
         c = self.label_embedding(labels).view(labels.size(0), -1, 1, 1)
         z = torch.cat((z, c), dim=1)
@@ -107,7 +106,6 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, img, labels):
-        # Embedding the class labels
         c = self.label_embedding(labels).view(labels.size(0), 3, 256, 256)
         img = torch.cat((img, c), dim=1)
 
