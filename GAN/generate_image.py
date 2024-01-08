@@ -1,8 +1,6 @@
 import torch
-import torch.nn as nn
 from GAN.gans_models import Generator
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 def generate_images(generator, latent_dim, num_classes, device):
