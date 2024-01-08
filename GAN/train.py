@@ -1,13 +1,14 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import matplotlib.pyplot as plt
-import numpy as np
-from GAN.gans_models import Generator, Discriminator
+from torchvision.datasets import ImageFolder
+
+from GAN.gans_models import Discriminator, Generator
 
 
 def main():

@@ -1,15 +1,12 @@
 import csv
-import os
-import shutil
 from pathlib import Path
 
 import cv2
 import numpy as np
-import tqdm
 from imblearn.over_sampling import SMOTE
 
 from constants import ROOT_DIR
-from um.draw_utils import draw_keypoints, draw_connections
+from um.draw_utils import draw_connections, draw_keypoints
 
 
 def save_images(X, y) -> None:

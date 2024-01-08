@@ -1,22 +1,16 @@
-import sys
+import csv
 
 import numpy as np
+from rich import print
 from rich.progress import Progress
 from sklearn.model_selection import train_test_split
-
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
+from constants import FOLDS
 from um.binarization import simple_binarization
 from um.oversampler import transform_dict_to_lists, transform_lists_to_dict
-
-from rich import print
 
 
 def score(classifiers: list, X_test, y_test, progress, classifier_name) -> float:
@@ -40,6 +34,23 @@ def score(classifiers: list, X_test, y_test, progress, classifier_name) -> float
     return accuracy
 
 
+def save_result_scores(result_scores, output_path):
+    results = []
+    for classifier_name in result_scores.keys():
+        for i, accuracy in enumerate(result_scores[classifier_name]):
+            result = {
+                "fold": i,
+                "classifier_name": classifier_name,
+                "accuracy": accuracy,
+            }
+            results.append(result)
+
+    with open(output_path, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=results[0].keys())
+        writer.writeheader()
+        writer.writerows(results)
+
+
 def train_classifiers(keypoints: dict[str, list], output_path):
     """
     Trains the classifiers
@@ -50,16 +61,14 @@ def train_classifiers(keypoints: dict[str, list], output_path):
     X, y = transform_dict_to_lists(keypoints)
 
     classifiers = {
-        # "kNN": (KNeighborsClassifier, {'n_neighbors': 3, "n_jobs": -1}),
+        "kNN": (KNeighborsClassifier, {'n_neighbors': 3, "n_jobs": -1}),
         "SVM": (SVC, {"gamma": 2, "C": 1}),
         "NB": (GaussianNB, {}),
     }
 
     result_scores = {name: [] for name in classifiers.keys()}
 
-    folds = 10
-    np.random.seed(420)
-    random_states = np.random.randint(0, np.iinfo(np.int32).max, size=folds)
+    random_states = np.random.randint(0, np.iinfo(np.int32).max, size=FOLDS)
 
     with Progress() as progress:
         fold_progress = progress.add_task("Fold", total=len(random_states))
@@ -82,4 +91,5 @@ def train_classifiers(keypoints: dict[str, list], output_path):
 
             progress.update(fold_progress, advance=1)
 
+    save_result_scores(result_scores, output_path)
     print(result_scores)

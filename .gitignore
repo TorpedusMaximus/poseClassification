@@ -1,10 +1,7 @@
-output
 .idea/
 __pycache__/
-dataset
-small_dataset
-Classifiers
-WAŻNE
 venv
-balanced
 prepared
+results
+test
+

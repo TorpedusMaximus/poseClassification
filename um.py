@@ -1,11 +1,10 @@
-import csv
 import shutil
-from pathlib import Path
 
 from constants import ROOT_DIR
 from um.movenet import generate_movenet_output
 from um.oversampler import balance_dataset
 from um.scikit import train_classifiers
+
 
 def approach_1():
     print('Approach 1')
@@ -15,7 +14,6 @@ def approach_1():
 
     keypoints = generate_movenet_output(dataset_path, output_path / 'movenet_results.csv')
     train_classifiers(keypoints, output_path / 'scikit_results.csv')
-    pass
 
 
 def approach_2():
@@ -49,3 +47,5 @@ if __name__ == '__main__':
     approach_1()
     print("\n")
     approach_2()
+    print("\n")
+    # approach_3()
