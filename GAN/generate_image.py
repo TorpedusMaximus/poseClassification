@@ -1,43 +1,42 @@
+import os
 import torch
 from GAN.gans_models import Generator
-import matplotlib.pyplot as plt
+import cv2
+from constants import CLASS_TO_NUMBER
 
 
-def generate_images(generator, latent_dim, num_classes, device):
-    random_label = torch.randint(0, num_classes, (1,), device=device)
-    random_image = generator(torch.randn(1, latent_dim, 1, 1, device=device), random_label).detach().cpu()
+def generate_images(generator, latent_dim, class_num, device):
+    class_label = torch.tensor([class_num], device=device)
+    class_image = generator(torch.randn(1, latent_dim, 1, 1, device=device), class_label).detach().cpu()
 
-    balance_label = torch.tensor([1], device=device)
-    balance_image = generator(torch.randn(1, latent_dim, 1, 1, device=device), balance_label).detach().cpu()
-
-    return random_image, balance_image
+    return class_image
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    saved_model_path = "./models/generator_model_v1.0.0_epoch_50.pth"
+    for i in range(100, 3800, 100):
+        saved_model_path = f"./models/generator_model_v1.0.0_epoch_{i}.pth"
 
-    latent_dim = 128
-    num_classes = 36
+        latent_dim = 128
+        num_classes = 35
 
-    generator = Generator(num_classes).to(device)
-    generator.load_state_dict(torch.load(saved_model_path))
-    generator.eval()
+        generator = Generator(num_classes).to(device)
+        generator.load_state_dict(torch.load(saved_model_path))
+        generator.eval()
 
-    random_image, balance_image = generate_images(generator, latent_dim, num_classes, device)
-
-    plt.subplot(1, 2, 1)
-    plt.title("Random Label")
-    plt.imshow(random_image.squeeze().numpy().transpose(1, 2, 0))
-    plt.axis("off")
-
-    plt.subplot(1, 2, 2)
-    plt.title("Balance Label")
-    plt.imshow(balance_image.squeeze().numpy().transpose(1, 2, 0))
-    plt.axis("off")
-
-    plt.show()
+        for class_number in CLASS_TO_NUMBER:
+            for j in range(50):
+                class_image = generate_images(generator, latent_dim, class_number, device)
+                image_to_save = class_image.squeeze().numpy().transpose(1, 2, 0)
+                image_to_save = image_to_save * 255
+                if not os.path.exists(f"./images/epoch_{i}"):
+                    os.mkdir(f"./images/epoch_{i}")
+                class_name = CLASS_TO_NUMBER[class_number]
+                if not os.path.exists(f"./images/epoch_{i}/{class_name}"):
+                    os.mkdir(f"./images/epoch_{i}/{class_name}")
+                path_image_to_save = f"./images/epoch_{i}/{class_name}/image_{class_name}_{j}.png"
+                cv2.imwrite(path_image_to_save, image_to_save)
 
 
 if __name__ == "__main__":

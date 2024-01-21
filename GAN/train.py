@@ -1,9 +1,10 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -12,7 +13,6 @@ from GAN.gans_models import Discriminator, Generator
 
 
 def main():
-    global idx_to_class
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print(f"Using {device} as a device")
@@ -29,7 +29,7 @@ def main():
     lr = 0.0002
     beta1 = 0.5
     beta2 = 0.999
-    num_epochs = 100
+    num_epochs = 2000000
     num_classes = len(train_dataset.classes)
 
     generator = Generator(num_classes).to(device)
@@ -40,6 +40,8 @@ def main():
 
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2))
     optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1,beta2))
+
+    idx_to_class = {}
 
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(dataloader):
@@ -92,7 +94,7 @@ def main():
             """
             Progress monitoring
             """
-            if (i + 1) % 30 == 0:
+            if (i + 1) % 60 == 0:
                 print(
                     f"Epoch [{epoch + 1}/{num_epochs}] " 
                     f"Batch {i + 1}/{len(dataloader)} "
@@ -100,7 +102,11 @@ def main():
                     f"Generator Loss: {generator_loss.item():.4f}"
                 )
 
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % 100 == 0:
+            if not os.path.exists("./GAN/generated_images"):
+                os.mkdir("./GAN/generated_images")
+            if not os.path.exists("./GAN/models"):
+                os.mkdir("./GAN/models")
             torch.save(generator.state_dict(), f"./GAN/models/generator_model_v1.0.0_epoch_{epoch + 1}.pth")
             with torch.no_grad():
                 z = torch.randn(16, latent_dim, 1, 1, device=device)
@@ -118,7 +124,10 @@ def main():
                     generated_image_np = generated_image.squeeze().numpy().transpose(1, 2, 0)
                     generated_image_np = np.clip((generated_image_np + 1) / 2.0, 0, 1)
 
-                    image_filename = f"./GAN/generated_images/generated_epoch_{epoch + 1}_label_{generated_label}.png"
+                    if not os.path.exists(f"./GAN/generated_images/epoch_{epoch + 1}"):
+                        os.mkdir(f"./GAN/generated_images/epoch_{epoch + 1}")
+
+                    image_filename = f"./GAN/generated_images/epoch_{epoch + 1}/generated_label_{generated_label}.png"
                     plt.imshow(generated_image_np)
                     plt.axis("off")
                     plt.savefig(image_filename)
