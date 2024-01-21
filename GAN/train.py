@@ -39,7 +39,7 @@ def main():
     # auxiliary_loss = nn.CrossEntropyLoss()
 
     optimizer_generator = optim.Adam(generator.parameters(), lr=lr, betas=(beta1, beta2))
-    optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1,beta2))
+    optimizer_discriminator = optim.Adam(discriminator.parameters(), lr=lr, betas=(beta1, beta2))
 
     idx_to_class = {}
 
@@ -68,7 +68,7 @@ def main():
             fake_loss = adversarial_loss(discriminator(fake_images.detach(), labels), fake)
             # Auxiliary loss for classifying the real images
             # real_auxiliary_loss = auxiliary_loss(discriminator.get_auxiliary_output(real_images), labels)
-            discriminator_loss = (real_loss + fake_loss) / 2 # + real_auxiliary_loss
+            discriminator_loss = (real_loss + fake_loss) / 2  # + real_auxiliary_loss
             # Backward pass nad optimize
             discriminator_loss.backward()
             optimizer_discriminator.step()
@@ -96,7 +96,7 @@ def main():
             """
             if (i + 1) % 60 == 0:
                 print(
-                    f"Epoch [{epoch + 1}/{num_epochs}] " 
+                    f"Epoch [{epoch + 1}/{num_epochs}] "
                     f"Batch {i + 1}/{len(dataloader)} "
                     f"Discriminator Loss: {discriminator_loss.item():.4f} "
                     f"Generator Loss: {generator_loss.item():.4f}"

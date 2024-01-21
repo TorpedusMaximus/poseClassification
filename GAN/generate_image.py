@@ -1,7 +1,9 @@
 import os
-import torch
-from GAN.gans_models import Generator
+
 import cv2
+import torch
+
+from GAN.gans_models import Generator
 from constants import CLASS_TO_NUMBER
 
 

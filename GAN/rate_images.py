@@ -1,10 +1,12 @@
 import csv
 import json
 import os
-import numpy as np
-from PIL import Image
-import tensorflow as tf
+
 import cv2
+import numpy as np
+import tensorflow as tf
+from PIL import Image
+
 from constants import CLASS_TO_NUMBER
 
 
@@ -64,27 +66,27 @@ def load_epoch_class_images(epoch_number, class_name, root_dir="./images/"):
 
 
 def main():
-    # movenet_model = tf.lite.Interpreter(model_path="./movenet.tflite")
-    # movenet_model.allocate_tensors()
-    # for epoch_number in range(100, 3800, 100):
-    #     for class_number in CLASS_TO_NUMBER:
-    #         class_name = CLASS_TO_NUMBER[class_number]
-    #         images_list: list = load_epoch_class_images(epoch_number, class_name)
-    #         for index, image_array in enumerate(images_list):
-    #             keypoints = extract_keypoints(image_array, movenet_model)
-    #             keypoints_above_threshold = count_keypoints_above_threshold(keypoints)
-    #             if not os.path.exists(f"./csvs/{epoch_number}"):
-    #                 os.mkdir(f"./csvs/{epoch_number}")
-    #             with open(f"./csvs/{epoch_number}/{class_name}.csv", 'a', newline='') as csvfile:
-    #                 csvwriter = csv.writer(csvfile, delimiter=';')
-    #                 csvwriter.writerow([index, keypoints_above_threshold])
+    movenet_model = tf.lite.Interpreter(model_path="../movenet.tflite")
+    movenet_model.allocate_tensors()
+    for epoch_number in range(100, 3800, 100):
+        for class_number in CLASS_TO_NUMBER:
+            class_name = CLASS_TO_NUMBER[class_number]
+            images_list: list = load_epoch_class_images(epoch_number, class_name)
+            for index, image_array in enumerate(images_list):
+                keypoints = extract_keypoints(image_array, movenet_model)
+                keypoints_above_threshold = count_keypoints_above_threshold(keypoints)
+                if not os.path.exists(f"./csvs_old_movenet/{epoch_number}"):
+                    os.mkdir(f"./csvs_old_movenet/{epoch_number}")
+                with open(f"./csvs_old_movenet/{epoch_number}/{class_name}.csv", 'a', newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile, delimiter=';')
+                    csvwriter.writerow([index, keypoints_above_threshold])
 
     highest_for_every_class = {}
 
-    for epoch_dir in os.listdir("./csvs/"):
-        for file_class_name in os.listdir(f"./csvs/{epoch_dir}"):
+    for epoch_dir in os.listdir("./csvs_old_movenet/"):
+        for file_class_name in os.listdir(f"./csvs_old_movenet/{epoch_dir}"):
             total_sum = 0
-            with open(f"./csvs/{epoch_dir}/{file_class_name}", 'r') as csvfile:
+            with open(f"./csvs_old_movenet/{epoch_dir}/{file_class_name}", 'r') as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=';')
                 for row in csvreader:
                     total_sum += float(row[1])
@@ -92,7 +94,8 @@ def main():
                 if epoch_dir != "100":
                     x = int(float(highest_for_every_class[file_class_name.split(".")[0]].split(",")[1]))
                     if total_sum >= x:
-                        highest_for_every_class.update({file_class_name.split(".")[0]: f"{epoch_dir},{total_sum},{round(total_sum/(17*50), 3)}%"})
+                        highest_for_every_class.update({file_class_name.split(".")[
+                                                            0]: f"{epoch_dir},{total_sum},{round(total_sum / (17 * 50), 3)}%"})
                         print(f"Total sum for {epoch_dir}/{file_class_name}:", total_sum)
                 else:
                     highest_for_every_class.update(

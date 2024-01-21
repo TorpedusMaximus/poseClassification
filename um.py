@@ -1,9 +1,10 @@
 import shutil
 
-from constants import ROOT_DIR
 from um.movenet import generate_movenet_output
 from um.oversampler import balance_dataset
 from um.scikit import train_classifiers
+
+from constants import ROOT_DIR
 
 
 def approach_1():

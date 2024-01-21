@@ -1,12 +1,11 @@
 import os
 
+import cv2
 import torch
 
 from GAN.gans_models import Generator
 from GAN.generate_image import generate_images
 from constants import CLASS_TO_NUMBER
-
-import cv2
 
 
 def main():
