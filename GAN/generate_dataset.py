@@ -11,7 +11,7 @@ from constants import CLASS_TO_NUMBER
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    saved_model_path = f"./models/generator_model_v1.0.0_epoch_3600.pth"
+    saved_model_path = f"./models/generator_model_v1.0.0_epoch_1600.pth"
 
     generator = Generator(len(CLASS_TO_NUMBER)).to(device)
     generator.load_state_dict(torch.load(saved_model_path))

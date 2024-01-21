@@ -30,7 +30,7 @@ CLASS_TO_NUMBER = {
     19: "happy_baby",
     20: "high_lunge",
     21: "legs-up-the-wall",
-    22: "lord_of_the_dance",
+    22: "lord of the dance",
     23: "lotus",
     24: "one-legged_king_pigeon",
     25: "pigeon",
